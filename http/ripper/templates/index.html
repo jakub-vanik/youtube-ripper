@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="cs">
+  <head>
+    <title>Ripper</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for("static", filename = "style.css") }}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for("static", filename = "favicon-32x32.png") }}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for("static", filename = "favicon-16x16.png") }}" />
+  </head>
+  <body>
+    <div class="main">
+      <div class="part">
+       <form method="post">
+         <table class="input">
+           <tr>
+             <td class="input-address">
+               <input class="address" type="text" name="address" value="{{ address }}" />
+              </td>
+             <td class="input-button">
+               <input class="button" type="submit" value="{{ _("Select") }}" />
+            </td>
+           </tr>
+         </table>
+       </form>
+      </div>
+      {% if meta and meta.entries | length <= 1 %}
+        <div class="part">
+          <table class="info">
+            {% if meta.title %}
+              <tr>
+                <td class="info-type">{{ _("Title") }}</td>
+                <td class="info-value">
+                  <a href="{{ meta.webpage_url }}">{{ meta.title }}</a>
+                </td>
+              </tr>
+            {% endif %}
+            {% if meta.uploader %}
+              <tr>
+                <td class="info-type">{{ _("Author") }}</td>
+                <td class="info-value">
+                  <a href="{{ meta.uploader_url }}">{{ meta.uploader }}</a>
+                </td>
+              </tr>
+            {% endif %}
+            {% if meta.duration %}
+              <tr>
+                <td class="info-type">{{ _("Duration") }}</td>
+                <td class="info-value">{{ format_time(meta.duration) }}</td>
+              </tr>
+            {% endif %}
+          </table>
+          <form action="{{ url_for("main.download") }}" method="post">
+            <input class="field" type="hidden" name="address" value="{{ address }}" />
+            <table class="input">
+              <tr>
+                <td class="input-format">
+                  <select class="format" name="video_format">
+                    <option value="">{{ _("no video") }}</option>
+                    {% if meta.formats %}
+                      {% for format in meta.formats %}
+                        {% if format.vcodec != "none" %}
+                          <option value="{{ format.format_id }}">{{ format.format }}{% if format.acodec != "none" %} + audio{% endif %}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                        {% endif %}
+                      {% endfor %}
+                    {% elif meta.entries %}
+                      {% for entry in meta.entries %}
+                        {% for format in entry.formats %}
+                          {% if format.vcodec != "none" %}
+                            <option value="{{ format.format_id }}">{{ format.format }}{% if format.acodec != "none" %} + audio{% endif %}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                          {% endif %}
+                        {% endfor %}
+                      {% endfor %}
+                    {% endif %}
+                  </select>
+                </td>
+                <td class="input-format">
+                  <select class="format" name="audio_format">
+                    <option value="">{{ _("no audio") }}</option>
+                    {% if meta.formats %}
+                      {% for format in meta.formats %}
+                        {% if format.acodec != "none" and format.vcodec == "none" %}
+                          <option value="{{ format.format_id }}">{{ format.format }}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                        {% endif %}
+                      {% endfor %}
+                    {% elif meta.entries %}
+                      {% for entry in meta.entries %}
+                        {% for format in entry.formats %}
+                          {% if format.acodec != "none" and format.vcodec == "none" %}
+                            <option value="{{ format.format_id }}">{{ format.format }}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                          {% endif %}
+                        {% endfor %}
+                      {% endfor %}
+                    {% endif %}
+                  </select>
+                </td>
+                <td class="input-button">
+                  <input class="button" type="submit" value="{{ _("Download") }}" />
+                </td>
+              </tr>
+            </table>
+          </form>
+        </div>
+      {% endif %}
+      <div id="status">
+      </div>
+      <div class="footer">
+        {{ _("Developed by Jakub Vaník, based on great opensource projects") }}<br />
+        <a href="https://youtube-dl.org/">youtube-dl</a>
+        <a href="https://www.palletsprojects.com/p/flask/">Flask</a>
+        <a href="https://www.docker.com/">Docker</a>
+        <a href="https://archlinuxarm.org/">Arch Linux ARM</a>
+        <a href="https://www.raspberrypi.org/">Raspberry Pi</a>
+      </div>
+    </div>
+    <script>
+      function refresh() {
+        var http = new XMLHttpRequest();
+        http.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            document.getElementById('status').innerHTML = this.responseText;
+            setTimeout(refresh, 1000);
+          }
+        };
+        http.open('GET', '{{ url_for("main.status") }}');
+        http.send();
+      }
+      refresh();
+    </script>
+  </body>
+</html>

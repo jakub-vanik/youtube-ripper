@@ -1,0 +1,76 @@
+# Czech translations for PROJECT.
+# Copyright (C) 2020 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2020-02-21 13:39+0000\n"
+"PO-Revision-Date: 2020-02-21 12:22+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: cs\n"
+"Language-Team: cs <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: templates/index.html:19
+msgid "Select"
+msgstr "Vybrat"
+
+#: templates/index.html:30
+msgid "Title"
+msgstr "Název"
+
+#: templates/index.html:38
+msgid "Author"
+msgstr "Autor"
+
+#: templates/index.html:46
+msgid "Duration"
+msgstr "Délka"
+
+#: templates/index.html:57
+msgid "no video"
+msgstr "bez videa"
+
+#: templates/index.html:77
+msgid "no audio"
+msgstr "bez zvuku"
+
+#: templates/index.html:96
+msgid "Download"
+msgstr "Stáhnout"
+
+#: templates/index.html:106
+msgid "Developed by Jakub Vaník, based on great opensource projects"
+msgstr "Naprogramoval Jakub Vaník, založeno na úžasných opensource projektech"
+
+#: templates/status.html:16
+msgid "hidden (other user's request)"
+msgstr "skryto (požadavek jiného uživatele)"
+
+#: templates/status.html:28
+msgid "done"
+msgstr "hotovo"
+
+#: templates/status.html:31
+msgid "failed!"
+msgstr "selhalo!"
+
+#: templates/status.html:39
+msgid "downloading..."
+msgstr "stahování..."
+
+#: templates/status.html:42
+msgid "processing..."
+msgstr "zpracování..."
+
+#: templates/status.html:45
+msgid "waiting..."
+msgstr "čekání..."
+

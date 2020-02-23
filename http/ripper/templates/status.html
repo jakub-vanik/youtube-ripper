@@ -1,0 +1,53 @@
+{% macro progress(label, value) -%}
+  <div class="progress">
+    <div class="progress-overlay">
+      <div class="progress-label">{{ label }}</div>
+    </div>
+    <div class="progress-fill" style="width: {{ "{:.0f}".format([value * 100, 100] | min) }}%;">
+    </div>
+  </div>
+{%- endmacro %}
+{% if downloads %}
+  <div class="part">
+    <table class="status">
+      {% for download in downloads %}
+        <tr>
+          <td class="status-title">
+            {% if download.hidden %}
+              <div class="hidden">{{ _("hidden (other user's request)") }}</div>
+            {% else %}
+              {% if download.done %}
+                <a href="{{ url_for("main.index") }}output/{{ download.filepath | urlencode }}">{{ download.info.title }}</a>
+              {% else %}
+                {{ download.address }}
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="status-status">
+            {% if download.done %}
+              {% if download.filesize %}
+                {{ progress(_("done") + " (" + format_size(download.filesize) + ")", 1.0) }}
+              {% endif %}
+            {% elif download.failed %}
+              {{ progress(_("failed!"), 0.0) }}
+            {% elif download.active %}
+              {% if download.progress and download.progress.status == "downloading" %}
+                {% if download.progress.total_bytes %}
+                  {{ progress(download.progress._percent_str + " (" + download.progress._eta_str + ")", download.progress.downloaded_bytes / download.progress.total_bytes) }}
+                {% elif download.progress.total_bytes_estimate %}
+                  {{ progress(download.progress._percent_str + " (" + download.progress._eta_str + ")", download.progress.downloaded_bytes / download.progress.total_bytes_estimate) }}
+                {% else %}
+                  {{ progress(_("downloading..."), 0.0) }}
+                {% endif %}
+              {% else %}
+                {{ progress(_("processing..."), 0.0) }}
+              {% endif %}
+            {% else %}
+              {{ progress(_("waiting..."), 0.0) }}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
