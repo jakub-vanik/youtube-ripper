@@ -93,7 +93,7 @@ class Downloader:
           self.current_task = task
         task["active"] = True
         try:
-          params = {"format": task["format"], "progress_hooks": [self.progress_hook], "ratelimit": 512 * 1024}
+          params = {"cachedir": False, "format": task["format"], "progress_hooks": [self.progress_hook], "ratelimit": 512 * 1024}
           with youtube_dl.YoutubeDL(params) as ydl:
             ydl.add_post_processor(Remuxer(ydl, task["directory"], self.filepath_hook))
             task["info"] = ydl.extract_info(task["address"])
@@ -135,7 +135,8 @@ class Downloader:
 
   def metadata(self, address):
     try:
-      with youtube_dl.YoutubeDL() as ydl:
+      params = {"cachedir": False}
+      with youtube_dl.YoutubeDL(params) as ydl:
         return ydl.extract_info(address, download=False)
     except:
       return None
