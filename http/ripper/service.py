@@ -34,13 +34,13 @@ class Remuxer(youtube_dl.postprocessor.ffmpeg.FFmpegPostProcessor):
     information["ext"] = "mkv"
     return [path], information
 
-class Scheduller:
+class Scheduler:
 
   def __init__(self):
     self.running = True
     self.lock = threading.Lock()
     self.condition = threading.Condition(self.lock)
-    self.scheduller = sched.scheduler(time.time, self.condition.wait)
+    self.scheduler = sched.scheduler(time.time, self.condition.wait)
     self.thread = threading.Thread(target = self.entry_point)
     self.thread.start()
 
@@ -48,18 +48,18 @@ class Scheduller:
     with self.lock:
       while self.running:
         self.condition.wait()
-        self.scheduller.run()
+        self.scheduler.run()
 
   def enter(self, delay, priority, action, argument=()):
     with self.lock:
-      event = self.scheduller.enter(delay, priority, action, argument)
+      event = self.scheduler.enter(delay, priority, action, argument)
       self.condition.notify()
       return event
 
   def cancel(self, event):
     with self.lock:
-      if event in self.scheduller.queue:
-        self.scheduller.cancel(event)
+      if event in self.scheduler.queue:
+        self.scheduler.cancel(event)
         self.condition.notify()
         return True
       return False
@@ -68,16 +68,16 @@ class Scheduller:
     with self.lock:
       self.running = False
       if force:
-        while self.scheduller.queue:
-          event = self.scheduller.queue[0]
-          self.scheduller.cancel(event)
+        while self.scheduler.queue:
+          event = self.scheduler.queue[0]
+          self.scheduler.cancel(event)
       self.condition.notify()
     self.thread.join()
 
 class Downloader:
 
-  def __init__(self, scheduller):
-    self.scheduller = scheduller
+  def __init__(self, scheduler):
+    self.scheduler = scheduler
     self.running = True
     self.downloads = []
     self.request_queue = queue.Queue()
@@ -109,7 +109,7 @@ class Downloader:
                 os.remove(os.path.join(root, file))
               except:
                 pass
-        self.scheduller.enter(download_timeout, 0, self.delete_task, (task, ))
+        self.scheduler.enter(download_timeout, 0, self.delete_task, (task, ))
 
   def progress_hook(self, progress):
     with self.status_lock:
@@ -194,8 +194,8 @@ class DownloadService(rpyc.Service):
 class Server:
 
   def __init__(self):
-    self.scheduller = Scheduller()
-    self.downloader = Downloader(self.scheduller)
+    self.scheduler = Scheduler()
+    self.downloader = Downloader(self.scheduler)
     self.service = rpyc.utils.helpers.classpartial(DownloadService, self)
 
   def __enter__(self):
@@ -203,20 +203,20 @@ class Server:
 
   def __exit__(self, type, value, traceback):
     self.downloader.terminate()
-    self.scheduller.terminate(True)
+    self.scheduler.terminate(True)
 
   def start(self):
     self.server = rpyc.utils.server.ThreadedServer(self.service, port = 18861)
-    self.terminate = self.scheduller.enter(service_timeout, 0, self.server.close)
+    self.terminate = self.scheduler.enter(service_timeout, 0, self.server.close)
     self.server.start()
 
   def refresh(self):
-    if self.scheduller.cancel(self.terminate):
-      self.terminate = self.scheduller.enter(service_timeout, 0, self.server.close)
+    if self.scheduler.cancel(self.terminate):
+      self.terminate = self.scheduler.enter(service_timeout, 0, self.server.close)
 
   def exit(self):
-    if self.scheduller.cancel(self.terminate):
-      self.terminate = self.scheduller.enter(0, 0, self.server.close)
+    if self.scheduler.cancel(self.terminate):
+      self.terminate = self.scheduler.enter(0, 0, self.server.close)
 
 def main():
   with Server() as server:
