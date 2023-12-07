@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import rpyc
 import time
 
@@ -22,8 +23,8 @@ class Client:
       except ConnectionRefusedError:
         if i == 0:
           connection = rpyc.classic.connect("localhost")
-          connection.modules.os.chdir("/srv/http/output")
-          connection.modules.os.system("/srv/http/ripper/service.py &")
+          connection.modules.os.chdir(os.environ["FLASK_APP"])
+          connection.modules.os.system("./service.py &")
         time.sleep(2)
     raise Exception("Unable to connect to the service")
 

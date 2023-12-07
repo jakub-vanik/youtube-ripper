@@ -2,6 +2,7 @@
 
 import copy
 import os
+import pathlib
 import queue
 import rpyc
 import sched
@@ -10,22 +11,20 @@ import string
 import threading
 import time
 import uuid
-import youtube_dl
+import yt_dlp
 
 service_timeout = 3600
 download_timeout = 3600
 
-class Remuxer(youtube_dl.postprocessor.ffmpeg.FFmpegPostProcessor):
+class Remuxer(yt_dlp.postprocessor.ffmpeg.FFmpegPostProcessor):
 
-  def __init__(self, downloader, out_directory, filepath_hook):
+  def __init__(self, downloader, filepath_hook):
     super(Remuxer, self).__init__(downloader)
-    self.out_directory = out_directory
     self.filepath_hook = filepath_hook
 
   def run(self, information):
     path = information["filepath"]
-    prefix, sep, ext = path.rpartition(".")
-    outpath = os.path.join(self.out_directory, prefix + sep + "mkv")
+    outpath = str(pathlib.Path(path).with_suffix(".mkv"))
     options = ["-c:v", "copy", "-c:a", "copy"]
     self.run_ffmpeg(path, outpath, options)
     self.filepath_hook(outpath)
@@ -93,22 +92,15 @@ class Downloader:
           self.current_task = task
         task["active"] = True
         try:
-          params = {"cachedir": False, "format": task["format"], "progress_hooks": [self.progress_hook], "ratelimit": 512 * 1024}
-          with youtube_dl.YoutubeDL(params) as ydl:
-            ydl.add_post_processor(Remuxer(ydl, task["directory"], self.filepath_hook))
+          params = {"cachedir": False, "format": task["format"], "paths": {"home": task["directory"]}, "progress_hooks": [self.progress_hook], "ratelimit": 512 * 1024}
+          with yt_dlp.YoutubeDL(params) as ydl:
+            ydl.add_post_processor(Remuxer(ydl, self.filepath_hook))
             task["info"] = ydl.extract_info(task["address"])
           task["done"] = True
         except Exception as e:
           task["error"] = str(e)
           task["failed"] = True
         task["active"] = False
-        for root, dirs, files in os.walk("."):
-          if root == ".":
-            for file in files:
-              try:
-                os.remove(os.path.join(root, file))
-              except:
-                pass
         self.scheduler.enter(download_timeout, 0, self.delete_task, (task, ))
 
   def progress_hook(self, progress):
@@ -136,13 +128,13 @@ class Downloader:
   def metadata(self, address):
     try:
       params = {"cachedir": False}
-      with youtube_dl.YoutubeDL(params) as ydl:
+      with yt_dlp.YoutubeDL(params) as ydl:
         return ydl.extract_info(address, download=False)
     except:
       return None
 
   def download(self, address, format):
-    directory = str(uuid.uuid1())
+    directory = os.path.join("static", str(uuid.uuid1()))
     os.mkdir(directory)
     task = {"address": address, "format": format, "directory": directory}
     with self.status_lock:
@@ -158,13 +150,13 @@ class Downloader:
     self.running = False
     self.request_queue.put(None)
     self.worker_thread.join()
-    for root, dirs, files in os.walk("."):
-      if root == ".":
-        for dir in dirs:
-          try:
-            shutil.rmtree(os.path.join(root, dir))
-          except:
-            pass
+    for root, dirs, files in os.walk("static"):
+      for dir in dirs:
+        try:
+          shutil.rmtree(os.path.join(root, dir))
+        except:
+          pass
+      dirs.clear()
 
 class DownloadService(rpyc.Service):
 

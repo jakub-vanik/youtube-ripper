@@ -17,7 +17,7 @@
               <div class="hidden">{{ _("hidden (other user's request)") }}</div>
             {% else %}
               {% if download.done %}
-                <a href="{{ url_for("main.index") }}output/{{ download.filepath | urlencode }}">{{ download.info.title }}</a>
+                <a href="{{ url_for("main.index") }}{{ download.filepath | urlencode }}">{{ download.info.title }}</a>
               {% else %}
                 {{ download.address }}
               {% endif %}
