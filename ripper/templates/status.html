@@ -26,16 +26,16 @@
           <td class="status-status">
             {% if download.done %}
               {% if download.filesize %}
-                {{ progress(_("done") + " (" + format_size(download.filesize) + ")", 1.0) }}
+                {{ progress(_("done") + " (" + download.filesize | format_size + ")", 1.0) }}
               {% endif %}
             {% elif download.failed %}
               {{ progress(_("failed!"), 0.0) }}
             {% elif download.active %}
               {% if download.progress and download.progress.status == "downloading" %}
                 {% if download.progress.total_bytes %}
-                  {{ progress(download.progress._percent_str + " (" + download.progress._eta_str + ")", download.progress.downloaded_bytes / download.progress.total_bytes) }}
+                  {{ progress("%0.1f" % (download.progress.downloaded_bytes / download.progress.total_bytes * 100) + "% (" + download.progress.eta | default(0) | format_time + ")", download.progress.downloaded_bytes / download.progress.total_bytes) }}
                 {% elif download.progress.total_bytes_estimate %}
-                  {{ progress(download.progress._percent_str + " (" + download.progress._eta_str + ")", download.progress.downloaded_bytes / download.progress.total_bytes_estimate) }}
+                  {{ progress("%0.1f" % (download.progress.downloaded_bytes / download.progress.total_bytes_estimate * 100) + "% (" + download.progress.eta | default(0) | format_time + ")", download.progress.downloaded_bytes / download.progress.total_bytes_estimate) }}
                 {% else %}
                   {{ progress(_("downloading..."), 0.0) }}
                 {% endif %}

@@ -44,7 +44,7 @@
             {% if meta.duration %}
               <tr>
                 <td class="info-type">{{ _("Duration") }}</td>
-                <td class="info-value">{{ format_time(meta.duration) }}</td>
+                <td class="info-value">{{ meta.duration | format_time }}</td>
               </tr>
             {% endif %}
           </table>
@@ -58,14 +58,14 @@
                     {% if meta.formats %}
                       {% for format in meta.formats %}
                         {% if format.vcodec != "none" %}
-                          <option value="{{ format.format_id }}">{{ format.format }}{% if format.acodec != "none" %} + audio{% endif %}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                          <option value="{{ format.format_id }}">{{ format.format }}{% if format.acodec != "none" %} + audio{% endif %}{% if format.filesize %} - {{ format.filesize | format_size }}{% endif %}</option>
                         {% endif %}
                       {% endfor %}
                     {% elif meta.entries %}
                       {% for entry in meta.entries %}
                         {% for format in entry.formats %}
                           {% if format.vcodec != "none" %}
-                            <option value="{{ format.format_id }}">{{ format.format }}{% if format.acodec != "none" %} + audio{% endif %}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                            <option value="{{ format.format_id }}">{{ format.format }}{% if format.acodec != "none" %} + audio{% endif %}{% if format.filesize %} - {{ format.filesize | format_size }}{% endif %}</option>
                           {% endif %}
                         {% endfor %}
                       {% endfor %}
@@ -78,14 +78,14 @@
                     {% if meta.formats %}
                       {% for format in meta.formats %}
                         {% if format.acodec != "none" and format.vcodec == "none" %}
-                          <option value="{{ format.format_id }}">{{ format.format }}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                          <option value="{{ format.format_id }}">{{ format.format }}{% if format.filesize %} - {{ format.filesize | format_size }}{% endif %}</option>
                         {% endif %}
                       {% endfor %}
                     {% elif meta.entries %}
                       {% for entry in meta.entries %}
                         {% for format in entry.formats %}
                           {% if format.acodec != "none" and format.vcodec == "none" %}
-                            <option value="{{ format.format_id }}">{{ format.format }}{% if format.filesize %} - {{ format_size(format.filesize) }}{% endif %}</option>
+                            <option value="{{ format.format_id }}">{{ format.format }}{% if format.filesize %} - {{ format.filesize | format_size }}{% endif %}</option>
                           {% endif %}
                         {% endfor %}
                       {% endfor %}

@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import datetime
 import flask
 
 from . import client
@@ -8,22 +7,10 @@ from . import session
 
 bp = flask.Blueprint("main", __name__)
 
-def format_time(seconds):
-  return str(datetime.timedelta(seconds=seconds))
-
-def format_size(size):
-  for unit in ["B","KB","MB","GB"]:
-    if abs(size) < 1024.0:
-      return "%3.1f%s" % (size, unit)
-    size /= 1024.0
-
 @bp.route("/", methods=["GET", "POST"])
 def index():
   with client.Client() as flask.g.client:
-    context = {
-      "format_time": format_time,
-      "format_size": format_size
-    }
+    context = {}
     if flask.request.method == "POST":
       address = flask.request.form["address"]
       context["address"] = address
@@ -43,10 +30,7 @@ def status():
       else:
         download["hidden"] = True
     flask.g.session.set_directories(existing_directories)
-    context = {
-      "downloads": downloads,
-      "format_size": format_size
-    }
+    context = {"downloads": downloads}
     return flask.render_template("status.html", **context)
 
 @bp.route("/download", methods=["POST"])
