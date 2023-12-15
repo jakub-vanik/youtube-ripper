@@ -40,7 +40,7 @@ docker run -d --restart always --name ripper ripper
 
 ```
 location /ripper/ {
-    proxy_pass http://172.17.0.2/;
+    proxy_pass http://172.17.0.2:5000/;
     proxy_set_header X-Forwarded-Prefix /ripper/;
 }
 ```
