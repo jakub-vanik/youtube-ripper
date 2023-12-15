@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import copy
 import os
 import pathlib
 import queue
@@ -18,16 +17,11 @@ download_timeout = 3600
 
 class Remuxer(yt_dlp.postprocessor.ffmpeg.FFmpegPostProcessor):
 
-  def __init__(self, downloader, filepath_hook):
-    super(Remuxer, self).__init__(downloader)
-    self.filepath_hook = filepath_hook
-
   def run(self, information):
     path = information["filepath"]
     outpath = str(pathlib.Path(path).with_suffix(".mkv"))
     options = ["-c:v", "copy", "-c:a", "copy"]
     self.run_ffmpeg(path, outpath, options)
-    self.filepath_hook(outpath)
     information["filepath"] = outpath
     information["format"] = "mkv"
     information["ext"] = "mkv"
@@ -92,10 +86,12 @@ class Downloader:
           self.current_task = task
         task["active"] = True
         try:
-          params = {"cachedir": False, "format": task["format"], "paths": {"home": task["directory"]}, "progress_hooks": [self.progress_hook]}
+          params = {"cachedir": False, "format": task["format"], "paths": {"home": task["directory"]}, "postprocessor_hooks": [self.progress_hook], "progress_hooks": [self.progress_hook]}
           with yt_dlp.YoutubeDL(params) as ydl:
-            ydl.add_post_processor(Remuxer(ydl, self.filepath_hook))
+            ydl.add_post_processor(Remuxer(ydl))
             task["info"] = ydl.extract_info(task["address"])
+          task["filepath"] = task["progress"]["info_dict"]["filepath"]
+          task["filesize"] = os.path.getsize(task["filepath"])
           task["done"] = True
         except Exception as e:
           task["error"] = str(e)
@@ -108,14 +104,6 @@ class Downloader:
       self.current_task["progress"] = progress
     if not self.running:
       raise Exception("Service is shutting down")
-
-  def filepath_hook(self, filepath):
-    with self.status_lock:
-      self.current_task["filepath"] = filepath
-      try:
-        self.current_task["filesize"] = os.path.getsize(filepath)
-      except:
-        pass
 
   def delete_task(self, task):
     with self.status_lock:
@@ -144,7 +132,7 @@ class Downloader:
 
   def get_downloads(self):
     with self.status_lock:
-      return copy.deepcopy(self.downloads)
+      return self.downloads
 
   def terminate(self):
     self.running = False
